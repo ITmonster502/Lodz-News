@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artykuł - Łódź News</title>
+  <meta name="description" content="Czytaj artykuł w serwisie Łódź News.">
+  <meta property="og:title" content="Artykuł - Łódź News">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="/assets/placeholder.svg">
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body data-theme="light">
+  <header>
+    <div class="top-bar">
+      <div id="weather-widget">
+        <span id="lodz-time"></span> | 
+        <span id="lodz-date"></span> | 
+        <span id="lodz-weather">Загрузка погоды...</span>
+      </div>
+      <div class="top-bar-right">
+        <div id="auth-links">
+          <a href="login.html" style="text-decoration: none; color: inherit; font-weight: 700;">Account</a>
+        </div>
+      </div>
+    </div>
+    <div class="header-main">
+      <div class="logo">
+        <h1><a href="index.html" style="text-decoration:none; color:inherit;">Łódź News</a></h1>
+      </div>
+      <nav>
+        <ul id="category-nav">
+          <li><a href="index.html">Home</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="controls">
+      <button id="theme-toggle" class="btn-toggle">🌙</button>
+    </div>
+  </header>
+
+  <main>
+    <article id="article-content">
+      <!-- Article content loaded dynamically -->
+    </article>
+
+    <section class="comments-section">
+      <h3>Komentarze</h3>
+      <div id="comments-list">
+        <!-- Comments loaded dynamically -->
+      </div>
+      <div id="comment-form-container">
+        <!-- Comment form for logged-in users -->
+      </div>
+    </section>
+  </main>
+
+  <script src="js/api.js?v=10"></script>
+  <script src="js/auth.js?v=10"></script>
+  <script src="js/main.js?v=10"></script>
+  <script>
+    // Specific logic for article page
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const articleId = urlParams.get('id');
+      if (articleId) {
+        await loadArticle(articleId);
+        await loadComments(articleId);
+      }
+    });
+  </script>
+</body>
+</html>

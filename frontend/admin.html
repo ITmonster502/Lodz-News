@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administratora - Łódź News</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    header { position: sticky; top: 0; z-index: 1001; }
+    .admin-grid { display: grid; grid-template-columns: 280px 1fr; gap: 30px; margin: 2rem auto; align-items: start; max-width: 1400px; padding: 0 20px; }
+    .admin-sidebar { background: var(--bg-soft); padding: 25px; border-radius: var(--radius); position: sticky; top: 120px; height: auto; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .admin-sidebar h3 { font-family: var(--font-serif); margin-bottom: 20px; font-size: 1.2rem; border-bottom: 2px solid var(--primary); display: inline-block; }
+    .admin-sidebar ul { list-style: none; }
+    .admin-sidebar li { margin-bottom: 12px; padding: 12px 15px; cursor: pointer; border-radius: var(--radius); transition: var(--transition); font-weight: 600; color: var(--text-muted); }
+    .admin-sidebar li:hover { background: var(--border); color: var(--primary); }
+    .admin-sidebar li.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(192, 57, 43, 0.2); }
+    
+    .admin-content { background: var(--bg); padding: 40px; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); min-height: 600px; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .admin-header h2 { font-family: var(--font-serif); font-size: 2rem; }
+    
+    .admin-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; }
+    .admin-table th { background: var(--bg-soft); color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; padding: 15px; text-align: left; border-bottom: 2px solid var(--border); }
+    .admin-table td { padding: 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover { background: var(--bg-soft); }
+    
+    .admin-actions { display: flex; gap: 10px; }
+    .btn-sm { padding: 8px 15px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: var(--transition); }
+    .btn-edit { background: #f39c12; color: white; }
+    .btn-edit:hover { background: #e67e22; transform: translateY(-2px); }
+    .btn-delete { background: #e74c3c; color: white; }
+    .btn-delete:hover { background: #c0392b; transform: translateY(-2px); }
+
+    /* Modal Styles */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; backdrop-filter: blur(5px); }
+    .modal-content { 
+      background: var(--bg); 
+      width: 90%; 
+      max-width: 700px; 
+      margin: 50px auto; 
+      padding: 40px; 
+      border-radius: var(--radius); 
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      animation: modalSlide 0.3s ease-out;
+    }
+    @keyframes modalSlide {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+    .modal-header h2 { font-family: var(--font-serif); font-size: 1.8rem; }
+    .close-modal { font-size: 1.5rem; cursor: pointer; color: var(--text-muted); transition: var(--transition); }
+    .close-modal:hover { color: var(--primary); }
+    
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-full { grid-column: 1 / -1; }
+  </style>
+</head>
+<body data-theme="light">
+  <header>
+    <div class="top-bar">
+      <span>Panel Zarządzania Treścią</span>
+    </div>
+    <div class="header-main">
+      <div class="logo"><h1>Panel Admina</h1></div>
+      <div class="controls">
+        <a href="index.html" class="btn-primary" style="padding: 8px 20px;">Powrót do serwisu</a>
+      </div>
+    </div>
+  </header>
+  <main class="admin-grid">
+    <aside class="admin-sidebar">
+      <h3>Menu</h3>
+      <ul>
+        <li class="active" onclick="showSection('dashboard', this)">📊 Dashboard</li>
+        <li onclick="showSection('articles', this)">📰 Artykuły</li>
+        <li onclick="showSection('categories', this)">📁 Kategorie</li>
+        <li onclick="showSection('users', this)">👥 Użytkownicy</li>
+        <li onclick="showSection('comments', this)">💬 Komentarze</li>
+      </ul>
+    </aside>
+    <section class="admin-content" id="admin-main">
+      <div id="dashboard-section">
+        <!-- Dashboard content will be loaded here -->
+      </div>
+      <div id="articles-section" style="display: none;">
+        <div class="admin-header">
+          <h2>Lista Artykułów</h2>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn-sm" style="background: #8e44ad; color: white;" onclick="cleanupBrokenArticles(this)">🧹 Очистить брак</button>
+            <label class="btn-sm" style="background: var(--bg-soft); color: var(--text); display:flex; align-items:center; gap:10px;">
+              <input id="autoimport-last24h" type="checkbox" style="accent-color: var(--primary);">
+              24h
+            </label>
+            <button class="btn-sm" style="background: var(--accent); color: white;" onclick="triggerAutoImport(this, 10)">🔄 Auto-Import</button>
+            <button class="btn-sm" style="background: #2c3e50; color: white;" onclick="triggerAutoImport(this, 50)">📥 Import 50</button>
+            <button class="btn-primary" onclick="openArticleModal()">+ Nowy Artykuł</button>
+          </div>
+        </div>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Tytuł</th>
+              <th>Kategoria</th>
+              <th>Status</th>
+              <th>Akcje</th>
+            </tr>
+          </thead>
+          <tbody id="admin-articles-list">
+            <!-- Articles will be loaded here -->
+          </tbody>
+        </table>
+        <div id="articles-pagination" style="display:flex; justify-content: space-between; align-items: center; margin-top: 20px;"></div>
+      </div>
+
+      <div id="categories-section" style="display: none;">
+        <!-- Categories content will be loaded here -->
+      </div>
+
+      <div id="users-section" style="display: none;">
+        <!-- Users content will be loaded here -->
+      </div>
+
+      <div id="comments-section" style="display: none;">
+        <!-- Comments content will be loaded here -->
+      </div>
+
+      <!-- Article Modal -->
+      <div id="article-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="modal-title">Dodaj Artykuл</h2>
+            <span class="close-modal" onclick="closeArticleModal()">&times;</span>
+          </div>
+          <form id="article-form">
+            <input type="hidden" id="article-id">
+            <div class="form-grid">
+              <div class="form-group form-full">
+                <label>Tytuł Artykułu</label>
+                <input type="text" id="art-title" placeholder="Wpisz tytuł..." required>
+              </div>
+              <div class="form-group">
+                <label>Kategoria</label>
+                <select id="art-category" required></select>
+              </div>
+              <div class="form-group">
+                <label>Data Publikacji</label>
+                <input type="datetime-local" id="art-date">
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <select id="art-status">
+                  <option value="draft">Szkic</option>
+                  <option value="published">Opublikowany</option>
+                </select>
+              </div>
+              <div class="form-group form-full">
+                <label>URL Obrazka (Featured Image)</label>
+                <div style="display: flex; gap: 10px;">
+                  <input type="text" id="art-image" placeholder="https://example.com/image.jpg" style="flex: 1;">
+                  <input type="file" id="art-file" style="display: none;" onchange="uploadImage(this)">
+                  <button type="button" class="btn-sm" style="background: var(--secondary); color: white;" onclick="document.getElementById('art-file').click()">Wgraй plik</button>
+                </div>
+              </div>
+              <div class="form-group form-full">
+                <label>Treść Artyкуłu</label>
+                <textarea id="art-content" style="height: 250px;" placeholder="Zacznij pisać..." required></textarea>
+              </div>
+            </div>
+            <div style="display:flex; gap:15px; margin-top:30px; justify-content: flex-end;">
+              <button type="button" class="btn-sm" style="background: var(--bg-soft); color: var(--text);" onclick="closeArticleModal()">Anuluj</button>
+              <button type="submit" class="btn-primary">Zapisz Artykuł</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Category Modal -->
+      <div id="category-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+          <div class="modal-header">
+            <h2>Dodaj Kategorię</h2>
+            <span class="close-modal" onclick="closeCategoryModal()">&times;</span>
+          </div>
+          <form id="category-form">
+            <div class="form-group">
+              <label>Nazwa Kategorii</label>
+              <input type="text" id="cat-name" placeholder="np. Sport, Biznes..." required>
+            </div>
+            <div style="display:flex; gap:15px; margin-top:30px; justify-content: flex-end;">
+              <button type="button" class="btn-sm" style="background: var(--bg-soft); color: var(--text);" onclick="closeCategoryModal()">Anuluj</button>
+              <button type="submit" class="btn-primary">Dodaj</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="js/api.js?v=11"></script>
+  <script src="js/auth.js?v=11"></script>
+  <script src="js/admin.js?v=11"></script>
+</body>
+</html>
